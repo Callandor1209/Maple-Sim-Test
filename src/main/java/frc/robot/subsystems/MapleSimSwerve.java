@@ -93,4 +93,8 @@ public class MapleSimSwerve implements SwerveDrive {
 
     }
 
+    public SwerveDriveSimulation returnSwerveThing(){
+        return simulatedDrive.getDriveTrainSimulation();
+    }
+
 }

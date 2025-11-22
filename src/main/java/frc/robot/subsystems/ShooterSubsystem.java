@@ -40,7 +40,7 @@ public class ShooterSubsystem extends SubsystemBase {
   public void launchNote(){
     if(!Robot.INTAKE_SUBSYSTEM.isNoteInsideIntake())  return;
 
-
+    Robot.INTAKE_SUBSYSTEM.obtainNoteFromIntake();
     NoteOnFly noteOnFly = new NoteOnFly(        // Specify the position of the chassis when the note is launched
         Robot.DRIVETRAIN_SUBSYSTEM.getPose().getTranslation(),
         // Specify the translation of the shooter from the robot center (in the shooter’s reference frame)

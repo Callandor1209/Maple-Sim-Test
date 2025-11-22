@@ -47,7 +47,7 @@ import frc.robot.subsystems.SwerveDrive;
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
 
-public static SwerveDrive DRIVETRAIN_SUBSYSTEM;
+public static MapleSimSwerve DRIVETRAIN_SUBSYSTEM;
 public static IntakeSubsystem INTAKE_SUBSYSTEM;
 public static ShooterSubsystem SHOOTER_SUBSYSTEM;
   public static final CommandPS5Controller m_driverController = new CommandPS5Controller(0);
@@ -57,28 +57,6 @@ public static ShooterSubsystem SHOOTER_SUBSYSTEM;
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
       public Pose3d pose3d;
-// Create and configure a drivetrain simulation configuration
-final static DriveTrainSimulationConfig driveTrainSimulationConfig = DriveTrainSimulationConfig.Default()
-        // Specify gyro type (for realistic gyro drifting and error simulation)
-        .withGyro(COTS.ofPigeon2())
-        // Specify swerve module (for realistic swerve dynamics)
-        .withSwerveModule(COTS.ofMark4(
-                DCMotor.getKrakenX60(2), // Drive motor is a Kraken X60
-                DCMotor.getKrakenX60(2), // Steer motor is a Falcon 500
-                COTS.WHEELS.COLSONS.cof, // Use the COF for Colson Wheels
-                3)) // L3 Gear ratio
-        // Configures the track length and track width (spacing between swerve modules)
-        .withTrackLengthTrackWidth(Inches.of(24), Inches.of(24))
-        // Configures the bumper size (dimensions of the robot bumper)
-        .withBumperSize(Inches.of(30), Inches.of(30));
-
-        /* Create a swerve drive simulation */
-public static SwerveDriveSimulation swerveDriveSimulation = new SwerveDriveSimulation(
-  // Specify Configuration
-  driveTrainSimulationConfig,
-  // Specify starting pose
-  new Pose2d(3, 3, new Rotation2d())
-);
 
 
   public Robot() {
@@ -98,10 +76,9 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   if(Robot.isSimulation()){
     SimulatedArena.overrideInstance(new Arena2024Crescendo());
     SimulatedArena.getInstance();
-    SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
   }
   DRIVETRAIN_SUBSYSTEM = new MapleSimSwerve();
-  INTAKE_SUBSYSTEM = new IntakeSubsystem(swerveDriveSimulation);
+  INTAKE_SUBSYSTEM = new IntakeSubsystem(DRIVETRAIN_SUBSYSTEM.returnSwerveThing());
   SHOOTER_SUBSYSTEM = new ShooterSubsystem();
   configureBindings();
   DRIVETRAIN_SUBSYSTEM.setDefaultCommand(new DriveTrainDefaultCommand(DRIVETRAIN_SUBSYSTEM));

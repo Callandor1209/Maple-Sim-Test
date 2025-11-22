@@ -31,26 +31,17 @@ public class IntakeSubsystem extends SubsystemBase {
     if(intakeSimulation !=null){
       if(intakeMotor.get() > 0.01){
         intakeSimulation.startIntake();
+        System.out.println("Intake Starting");
       }
       else
       intakeSimulation.stopIntake();
     }
   }
 
-  public void setRunning(boolean runIntake) {
-    if (runIntake){
-        System.out.println("Intaking");
-        intakeSimulation.startIntake();
-        intakeSimulation.addGamePieceToIntake();
-      
-      } // Extends the intake out from the chassis frame and starts detecting contacts with game pieces
 
-    else
-        intakeSimulation.stopIntake(); // Retracts the intake into the chassis frame, disabling game piece collection
-}
 
 public boolean isNoteInsideIntake() {
-    return intakeSimulation.getGamePiecesAmount() != 0; // True if there is a game piece in the intake
+    return intakeSimulation.getGamePiecesAmount() != 0; 
 }
 
 
@@ -63,5 +54,10 @@ public boolean isNoteInsideIntake() {
 
   public double getIntakeSpeed(){
     return intakeMotor.get();
+  }
+  
+
+  public void obtainNoteFromIntake(){
+    intakeSimulation.obtainGamePieceFromIntake();
   }
 }
