@@ -10,6 +10,7 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
 import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
 import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
@@ -30,6 +31,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -38,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveTrainDefaultCommand;
 import frc.robot.commands.IntakeCommand;
+import frc.robot.subsystems.AIRobotSimulation;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -50,6 +54,7 @@ public class Robot extends LoggedRobot {
 public static MapleSimSwerve DRIVETRAIN_SUBSYSTEM;
 public static IntakeSubsystem INTAKE_SUBSYSTEM;
 public static ShooterSubsystem SHOOTER_SUBSYSTEM;
+public static AIRobotSimulation AI_ROBOT_SIMULATION;
   public static final CommandPS5Controller m_driverController = new CommandPS5Controller(0);
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
       public static final SwerveRequest.ApplyRobotSpeeds PATH_APPLY_ROBOT_SPEEDS = new SwerveRequest.ApplyRobotSpeeds();
@@ -87,7 +92,8 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
   @Override
   public void robotPeriodic() {
-
+    //System.out.println(SimulatedBattery.getBatteryVoltage().baseUnitMagnitude());
+    System.out.println(RoboRioSim.getVInVoltage());
     CommandScheduler.getInstance().run();
             Pose2d pose2d = DRIVETRAIN_SUBSYSTEM.getPose();
              pose3d = new Pose3d(
@@ -96,6 +102,10 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
         0.0,
         new Rotation3d(0, 0, pose2d.getRotation().getRadians()));
         Logger.recordOutput("Robot/Pose3d", pose3d);
+        for(int i = 0;i< AIRobotSimulation.instances.length; i++){
+          Logger.recordOutput("Robot/AIRobots" + i, AIRobotSimulation.instances[i].driveSimulation.getActualPoseInSimulationWorld());
+        }
+
 
         Pose3d[] notesPoses = SimulatedArena.getInstance()
         .getGamePiecesArrayByType("Note");
@@ -152,7 +162,9 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
   /** This function is called once when the robot is first started up. */
   @Override
-  public void simulationInit() {}
+  public void simulationInit() {
+    AIRobotSimulation.startOpponentRobotSimulations();
+  }
 
   /** This function is called periodically whilst in simulation. */
   @Override

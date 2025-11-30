@@ -10,7 +10,9 @@ import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,6 +23,9 @@ public class ShooterSubsystem extends SubsystemBase {
   Distance distance  = Units.Meters.of(0.45);
   double randomValue = 1000.0;
   LinearVelocity linearVelocity;
+  Angle distance2 = Units.Radians.of(70);
+
+
 
   TalonFX motor1 = new TalonFX(10);
 
