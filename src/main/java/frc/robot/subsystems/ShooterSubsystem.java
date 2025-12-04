@@ -15,6 +15,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
@@ -60,7 +61,19 @@ public class ShooterSubsystem extends SubsystemBase {
         // The launch speed is proportional to the RPM; assumed to be 16 meters/second at 6000 RPM
   linearVelocity,
         // The angle at which the note is launched
-        Units.Radian.of(Math.toRadians(70))).enableBecomeNoteOnFieldAfterTouchGround().asAmpShotNote(null);
+        Units.Radian.of(Math.toRadians(70))).enableBecomeNoteOnFieldAfterTouchGround().asSpeakerShotNote(increaseBlueScore);
         SimulatedArena.getInstance().addGamePieceProjectile(noteOnFly);
+  }
+
+
+  Runnable increaseBlueScore = new Runnable() {
+    @Override
+    public void run() {
+      Robot.blueScore++;
+    }
+};
+
+  public LinearVelocity getVelocity(){
+    return Units.MetersPerSecond.of(motor1.getVelocity().getValueAsDouble());
   }
 }

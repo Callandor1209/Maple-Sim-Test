@@ -30,6 +30,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -49,6 +50,7 @@ import frc.robot.subsystems.SwerveDrive;
 
 
 public class Robot extends LoggedRobot {
+  public static int blueScore = 0;
   private Command m_autonomousCommand;
 
 public static MapleSimSwerve DRIVETRAIN_SUBSYSTEM;
@@ -92,8 +94,7 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
   @Override
   public void robotPeriodic() {
-    //System.out.println(SimulatedBattery.getBatteryVoltage().baseUnitMagnitude());
-    System.out.println(RoboRioSim.getVInVoltage());
+
     CommandScheduler.getInstance().run();
             Pose2d pose2d = DRIVETRAIN_SUBSYSTEM.getPose();
              pose3d = new Pose3d(
@@ -110,6 +111,8 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
         Pose3d[] notesPoses = SimulatedArena.getInstance()
         .getGamePiecesArrayByType("Note");
   Logger.recordOutput("FieldSimulation/NotesPositions", notesPoses);
+  System.out.println(blueScore);
+
   }
 
 
@@ -170,6 +173,7 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   @Override
   public void simulationPeriodic() {
   SimulatedArena.getInstance().simulationPeriodic();
+  RoboRioSim.setVInCurrent(0);
   }
 
   public void configureBindings(){

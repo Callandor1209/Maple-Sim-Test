@@ -123,7 +123,7 @@ public class AIRobotSimulation extends SubsystemBase {
             // Initial height of the flying note
             distance,
             // The launch speed is proportional to the RPM; assumed to be 16 meters/second at 6000 RPM
-      linearVelocity,
+                Robot.SHOOTER_SUBSYSTEM.getVelocity(),
             // The angle at which the note is launched
             Robot.SHOOTER_SUBSYSTEM.distance2).enableBecomeNoteOnFieldAfterTouchGround().asAmpShotNote(null)
                     .enableBecomeNoteOnFieldAfterTouchGround()));
