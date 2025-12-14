@@ -32,6 +32,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PS5Controller;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -39,6 +40,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot;
 
@@ -58,15 +61,17 @@ public class AIRobotSimulation extends SubsystemBase {
     public final SelfControlledSwerveDriveSimulation driveSimulation;
     private final Pose2d queeningPose;
     private final int id;
+    private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
+    private final VisionSubsystem visionSubsystem;
 
-    public AIRobotSimulation(int id) {
+    public AIRobotSimulation(int id,String name) {
         this.id = id;
         this.queeningPose = ROBOT_QUEENING_POSITIONS[id];
         this.driveSimulation = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(
             DriveTrainSimulationConfig.Default(), 
             queeningPose
         ));
-
+        this.visionSubsystem = new VisionSubsystem(driveSimulation.getDriveTrainSimulation(),name);
         SimulatedArena.getInstance().addDriveTrainSimulation(
             driveSimulation.getDriveTrainSimulation()
         );
@@ -138,12 +143,12 @@ public static final Pose2d[] ROBOTS_STARTING_POSITIONS = new Pose2d[] {
 };
 
 /** Joystick drive command for opponent robots */
-private Command joystickDrive(XboxController joystick) {
+private Command joystickDrive(CommandPS5Controller controller)  {
 // Obtain chassis speeds from joystick input
 final Supplier<ChassisSpeeds> joystickSpeeds = () -> new ChassisSpeeds(
-        -joystick.getLeftY() * driveSimulation.maxLinearVelocity().in(MetersPerSecond),
-        -joystick.getLeftX() * driveSimulation.maxLinearVelocity().in(MetersPerSecond),
-        -joystick.getRightX() * driveSimulation.maxAngularVelocity().in(RadiansPerSecond));
+        -controller.getLeftY() * driveSimulation.maxLinearVelocity().in(MetersPerSecond),
+        -controller.getLeftX() * driveSimulation.maxLinearVelocity().in(MetersPerSecond),
+        -controller.getRightX() * driveSimulation.maxAngularVelocity().in(RadiansPerSecond));
 
 // Obtain driverstation facing for opponent driver station
 final Supplier<Rotation2d> opponentDriverStationFacing = () ->
@@ -160,7 +165,7 @@ return Commands.run(() -> {
         }, this)
         // Before the command starts, reset the robot to a position inside the field
         .beforeStarting(() -> driveSimulation.setSimulationWorldPose(
-                FieldMirroringUtils.toCurrentAlliancePose(ROBOTS_STARTING_POSITIONS[id - 1])));
+                FieldMirroringUtils.toCurrentAlliancePose(ROBOTS_STARTING_POSITIONS[id])));
 }
 
 
@@ -169,7 +174,7 @@ public void buildBehaviorChooser(
         Command toRunAtEndOfSegment0,
         PathPlannerPath segment1,
         Command toRunAtEndOfSegment1,
-        XboxController joystick) {
+        XboxController controller) {
             System.err.println("Starting sim");
     SendableChooser<Command> behaviorChooser = new SendableChooser<>();
     final Supplier<Command> disable =
@@ -181,7 +186,7 @@ public void buildBehaviorChooser(
     // Option to disable the robot
     behaviorChooser.setDefaultOption("Disable", disable.get());
 
-    behaviorChooser.addOption("Joystick Drive", joystickDrive(joystick));
+    behaviorChooser.addOption("Joystick Drive", joystickDrive(controller2));
 
     // Option to auto-cycle the robot
     behaviorChooser.addOption(
@@ -226,7 +231,7 @@ private Command getAutoCycleCommand(
 public static final AIRobotSimulation[] instances = new AIRobotSimulation[3]; // you can create as many opponent robots as you needs
 public static void startOpponentRobotSimulations() {
     try {
-        instances[0] = new AIRobotSimulation(0);
+        instances[0] = new AIRobotSimulation(0,"0");
         instances[0].buildBehaviorChooser(
                 PathPlannerPath.fromPathFile("Path1"),
                 Commands.none(),
@@ -234,7 +239,7 @@ public static void startOpponentRobotSimulations() {
                 Commands.none(),
                 new XboxController(2));
 
-        instances[1] = new AIRobotSimulation(1);
+        instances[1] = new AIRobotSimulation(1,"1");
         instances[1].buildBehaviorChooser(
                 PathPlannerPath.fromPathFile("Path1"),
                 instances[1].feedShot(),
@@ -243,7 +248,7 @@ public static void startOpponentRobotSimulations() {
                 new XboxController(3));
 
         
-        instances[2] = new AIRobotSimulation(2);
+        instances[2] = new AIRobotSimulation(2,"2");
         instances[2].buildBehaviorChooser(
                         PathPlannerPath.fromPathFile("Path1"),
                         instances[2].feedShot(),
@@ -257,5 +262,6 @@ public static void startOpponentRobotSimulations() {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    visionSubsystem.simUpdate();
   }
 }

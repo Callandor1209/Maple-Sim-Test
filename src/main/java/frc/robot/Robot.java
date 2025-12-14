@@ -47,6 +47,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.VisionSubsystem;
 
 
 public class Robot extends LoggedRobot {
@@ -57,6 +58,7 @@ public static MapleSimSwerve DRIVETRAIN_SUBSYSTEM;
 public static IntakeSubsystem INTAKE_SUBSYSTEM;
 public static ShooterSubsystem SHOOTER_SUBSYSTEM;
 public static AIRobotSimulation AI_ROBOT_SIMULATION;
+public static VisionSubsystem VISION_SUBSYSTEM;
   public static final CommandPS5Controller m_driverController = new CommandPS5Controller(0);
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
       public static final SwerveRequest.ApplyRobotSpeeds PATH_APPLY_ROBOT_SPEEDS = new SwerveRequest.ApplyRobotSpeeds();
@@ -89,6 +91,7 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   SHOOTER_SUBSYSTEM = new ShooterSubsystem();
   configureBindings();
   DRIVETRAIN_SUBSYSTEM.setDefaultCommand(new DriveTrainDefaultCommand(DRIVETRAIN_SUBSYSTEM));
+  VISION_SUBSYSTEM = new VisionSubsystem(DRIVETRAIN_SUBSYSTEM.returnSwerveThing(),"1");
 
   }
 
@@ -174,6 +177,7 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   public void simulationPeriodic() {
   SimulatedArena.getInstance().simulationPeriodic();
   RoboRioSim.setVInCurrent(0);
+  VISION_SUBSYSTEM.simUpdate();
   }
 
   public void configureBindings(){
