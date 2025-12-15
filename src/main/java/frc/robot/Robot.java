@@ -32,6 +32,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -48,17 +49,22 @@ import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.util.MLClass;
 
 
 public class Robot extends LoggedRobot {
   public static int blueScore = 0;
   private Command m_autonomousCommand;
+  public static Timer matchTimer = new Timer();
+  public static boolean noDefault = false;
 
 public static MapleSimSwerve DRIVETRAIN_SUBSYSTEM;
 public static IntakeSubsystem INTAKE_SUBSYSTEM;
 public static ShooterSubsystem SHOOTER_SUBSYSTEM;
 public static AIRobotSimulation AI_ROBOT_SIMULATION;
 public static VisionSubsystem VISION_SUBSYSTEM;
+public static MLClass ML_CLASS;
+public static SwerveDriveSimulation setSim;
   public static final CommandPS5Controller m_driverController = new CommandPS5Controller(0);
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
       public static final SwerveRequest.ApplyRobotSpeeds PATH_APPLY_ROBOT_SPEEDS = new SwerveRequest.ApplyRobotSpeeds();
@@ -70,7 +76,7 @@ public static VisionSubsystem VISION_SUBSYSTEM;
 
   public Robot() {
 Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
-
+matchTimer.start();
 
 if (isReal()) {
     Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")

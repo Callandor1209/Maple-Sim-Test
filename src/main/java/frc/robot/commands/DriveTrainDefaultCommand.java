@@ -69,7 +69,9 @@ public class DriveTrainDefaultCommand extends Command {
     }
 
     ChassisSpeeds speeds = new ChassisSpeeds(-x,-y,-r);
+    if(!Robot.noDefault){
     drive.drive(speeds, true,true);
+    }
     }
 
 

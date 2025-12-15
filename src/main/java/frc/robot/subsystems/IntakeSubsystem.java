@@ -22,7 +22,7 @@ public class IntakeSubsystem extends SubsystemBase {
       private final IntakeSimulation intakeSimulation;
   public final TalonFX intakeMotor = new TalonFX(0);
   public IntakeSubsystem(AbstractDriveTrainSimulation driveTrain) {
-    intakeSimulation = IntakeSimulation.OverTheBumperIntake("Note", driveTrain, Units.Meter.of(0.2),Units.Meter.of(0.2), IntakeSimulation.IntakeSide.BACK, 1);
+    intakeSimulation = IntakeSimulation.OverTheBumperIntake("Note", driveTrain, Units.Meter.of(0.2),Units.Meter.of(0.2), IntakeSimulation.IntakeSide.FRONT, 1);
   }
 
   @Override

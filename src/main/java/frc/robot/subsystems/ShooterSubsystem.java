@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
 
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -25,12 +26,18 @@ public class ShooterSubsystem extends SubsystemBase {
   double randomValue = 1000.0;
   LinearVelocity linearVelocity;
   Angle distance2 = Units.Radians.of(70);
+  IntakeSubsystem intakeSubsystem;
+  SwerveDriveSimulation driveTrainSubsystem;
 
 
 
   TalonFX motor1 = new TalonFX(10);
 
-  public ShooterSubsystem() {}
+  public ShooterSubsystem(IntakeSubsystem intakeSubsystem, SwerveDriveSimulation driveTrainSubsystem) {
+    this.intakeSubsystem = intakeSubsystem;
+    this.driveTrainSubsystem = driveTrainSubsystem;
+  }
+
 
   @Override
   public void periodic() {
@@ -44,17 +51,17 @@ public class ShooterSubsystem extends SubsystemBase {
   }
   
   public void launchNote(){
-    if(!Robot.INTAKE_SUBSYSTEM.isNoteInsideIntake())  return;
+    if(!intakeSubsystem.isNoteInsideIntake())  return;
 
-    Robot.INTAKE_SUBSYSTEM.obtainNoteFromIntake();
+    intakeSubsystem.obtainNoteFromIntake();
     NoteOnFly noteOnFly = new NoteOnFly(        // Specify the position of the chassis when the note is launched
-        Robot.DRIVETRAIN_SUBSYSTEM.getPose().getTranslation(),
+        driveTrainSubsystem.getSimulatedDriveTrainPose().getTranslation(),
         // Specify the translation of the shooter from the robot center (in the shooter’s reference frame)
         new Translation2d(0.2, 0),
         // Specify the field-relative speed of the chassis, adding it to the initial velocity of the projectile
-        Robot.DRIVETRAIN_SUBSYSTEM.getMeasuredSpeeds(),
+        driveTrainSubsystem.getDriveTrainSimulatedChassisSpeedsRobotRelative(),
         // The shooter facing direction is the same as the robot’s facing direction
-        Robot.DRIVETRAIN_SUBSYSTEM.getPose().getRotation(),
+        driveTrainSubsystem.getSimulatedDriveTrainPose().getRotation(),
                 // Add the shooter’s rotation,
         // Initial height of the flying note
         distance,
