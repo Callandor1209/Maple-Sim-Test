@@ -23,6 +23,7 @@ import frc.robot.Robot;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.util.ArrayClass;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class PlayDefenceCommand extends Command {
@@ -31,14 +32,16 @@ public class PlayDefenceCommand extends Command {
   VisionSubsystem visionSubsystem;
   IntakeSubsystem intakeSubsystem;
   ShooterSubsystem shooterSubsystem;
+  int id;
   Timer timer = new Timer();
 
-  public PlayDefenceCommand(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem) {
+  public PlayDefenceCommand(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem,int id) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.driveTrainSubsystem = driveSimulation;
     this.visionSubsystem = visionSubsystem;
     this.intakeSubsystem = intakeSubsystem;
     this.shooterSubsystem = shooterSubsystem;
+    this.id = id;
   }
 
   // Called when the command is initially scheduled.
@@ -72,7 +75,8 @@ public class PlayDefenceCommand extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    Robot.ML_CLASS.calculateNearestNeighbor(driveTrainSubsystem, visionSubsystem, intakeSubsystem, shooterSubsystem, false).schedule();
+   Command nextCommand = Robot.ML_CLASS.calculateNearestNeighbor(driveTrainSubsystem, visionSubsystem, intakeSubsystem, shooterSubsystem, false,id);
+   ArrayClass.aiRobot2Array[id].setCurretCommand(nextCommand);
   }
 
   // Returns true when the command should end.

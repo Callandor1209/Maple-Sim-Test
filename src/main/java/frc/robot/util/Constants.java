@@ -1,8 +1,13 @@
 package frc.robot.util;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
+import frc.robot.commands.AutoCommand1;
 import frc.robot.commands.ParkCommand;
+import frc.robot.commands.PlayDefenceCommand;
 
 public final class Constants {
     public static final double CUT_POWER = 0.2;
@@ -26,17 +31,17 @@ public final class Constants {
           };
       
           //for each data set need to have an output
-          public static final Command[] KEYS = {
-            new AutoCommand1(),
-            new PlayDefenceCommand(),
-            new ParkCommand(Robot.setSim),
-            new AutoCommand1(),
-            new ParkCommand(Robot.setSim),
-            new AutoCommand1(),
-            new PlayDefenceCommand(),
-            new AutoCommand1(),
-            new ParkCommand(Robot.setSim),
-            new ParkCommand(Robot.setSim)
-          };
+          public static final List<Supplier<Command>> KEYS = List.of(
+            () ->  new AutoCommand1(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new PlayDefenceCommand( Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new ParkCommand(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new AutoCommand1(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new ParkCommand(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new AutoCommand1(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new PlayDefenceCommand(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new AutoCommand1(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new ParkCommand(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId),
+            () -> new ParkCommand(Robot.setDrive,Robot.setVision,Robot.setIntake,Robot.setShooter,Robot.setId)
+          );
     }
 }

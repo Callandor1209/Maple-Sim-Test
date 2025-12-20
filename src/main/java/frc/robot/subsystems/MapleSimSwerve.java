@@ -1,9 +1,22 @@
 package frc.robot.subsystems;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,6 +26,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.util.struct.parser.ParseException;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
@@ -21,7 +39,7 @@ public class MapleSimSwerve implements SwerveDrive {
     private final SelfControlledSwerveDriveSimulation simulatedDrive;
     private final Field2d field2d;
 
-    public MapleSimSwerve() {
+    public MapleSimSwerve(boolean configureAutoBuilder) {
         // For your own code, please configure your drivetrain properly according to the documentation
         final DriveTrainSimulationConfig config = DriveTrainSimulationConfig.Default();
 
@@ -35,7 +53,52 @@ public class MapleSimSwerve implements SwerveDrive {
         // A field2d widget for debugging
         field2d = new Field2d();
         SmartDashboard.putData("simulation field", field2d);
+        if(configureAutoBuilder){
+          configureAutoBuilder();
+        }
     }
+
+ 
+
+
+    private void configureAutoBuilder()  {
+            try {
+                AutoBuilder.configure(
+                        // Use APIs from SwerveDrive interface
+                        this::getPose, 
+                        this::setPose,
+                        this::getMeasuredSpeeds,
+                        (speeds) -> this.drive(speeds, false, true),
+   
+                        // Configure the Auto PIDs
+                        new PPHolonomicDriveController(
+                                             // PID constants for translation
+                        new PIDConstants(10, 0, 0),
+                        // PID constants for rotation
+                        new PIDConstants(7, 0, 0)),
+   
+                        // Specify the PathPlanner Robot Config
+                        RobotConfig.fromGUISettings(),
+   
+                        // Path Flipping: Determines if the path should be flipped based on the robot's alliance color
+                        () -> DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue).equals(DriverStation.Alliance.Red),
+   
+                        // Specify the drive subsystem as a requirement of the command
+                        this);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (org.json.simple.parser.ParseException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    
+
+
+
+    
+
         @Override
     public void drive(ChassisSpeeds speeds, boolean fieldRelative, boolean isOpenLoop) {
         this.simulatedDrive.runChassisSpeeds(

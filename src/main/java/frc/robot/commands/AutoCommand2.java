@@ -16,6 +16,7 @@ import frc.robot.Robot;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.util.ArrayClass;
 import frc.robot.util.MLClass;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -27,14 +28,16 @@ public class AutoCommand2 extends Command {
   Timer timer;
   boolean done = false;
   boolean done2 = false;
+  int id;
 
   /** Creates a new AutoCommand2. */
-  public AutoCommand2(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem) {
+  public AutoCommand2(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, int id) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.driveTrainSubsystem = driveSimulation;
     this.visionSubsystem = visionSubsystem;
     this.intakeSubsystem = intakeSubsystem;
     this.shooterSubsystem = shooterSubsystem;
+    this.id = id;
 
   }
 
@@ -95,7 +98,8 @@ System.out.println("In Auto Command 2");
     if(!interrupted){
     Robot.noDefault = false;
     //new AutoCommand1().schedule();
-    Robot.ML_CLASS.calculateNearestNeighbor(driveTrainSubsystem,visionSubsystem,intakeSubsystem, shooterSubsystem, false).schedule();
+    Command nextCommand = Robot.ML_CLASS.calculateNearestNeighbor(driveTrainSubsystem,visionSubsystem,intakeSubsystem, shooterSubsystem, false,id);
+    ArrayClass.aiRobot2Array[id].setCurretCommand(nextCommand);
     SwerveModuleSimulation[] modules = driveTrainSubsystem.getModules();
     for (SwerveModuleSimulation module : modules) {
       // Get the motor controllers (only do this once during initialization!)

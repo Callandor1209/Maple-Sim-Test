@@ -1,7 +1,9 @@
 package frc.robot.util;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
+import java.util.function.Supplier;
 
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -18,7 +20,7 @@ import frc.robot.util.Constants;
 
 public class MLClass {
     double[][] data;
-    Command[] keys;
+    List<Supplier<Command>> keys;
     double biasTime =3;
     double biasOnHomeSide = 1;
     double biasVisionDetectsCargo = 1;
@@ -31,7 +33,7 @@ public class MLClass {
         keys = Constants.MLData.KEYS;
     }
 
-    public Command calculateNearestNeighbor(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, boolean isBlue){
+    public Command calculateNearestNeighbor(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, boolean isBlue, int id){
         double time = Robot.matchTimer.get() /60;
 
         double onHomeSide;
@@ -61,7 +63,12 @@ public class MLClass {
                 closestNeighborDistance = distance;
             }
         }
-        return keys[closestNeighbor];
+        Robot.setDrive = driveSimulation;
+        Robot.setIntake = intakeSubsystem;
+        Robot.setShooter = shooterSubsystem;
+        Robot.setVision = visionSubsystem;
+        Robot.setId = id;
+        return keys.get(closestNeighbor).get();
     }
 
     public double distanceCalculations(double[] inputDoubleArray, double[] compareDoubleArray){

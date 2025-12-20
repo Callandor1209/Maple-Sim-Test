@@ -23,6 +23,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -43,12 +45,14 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveTrainDefaultCommand;
 import frc.robot.commands.IntakeCommand;
+import frc.robot.subsystems.AIRobot2;
 import frc.robot.subsystems.AIRobotSimulation;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.util.ArrayClass;
 import frc.robot.util.MLClass;
 
 
@@ -58,13 +62,26 @@ public class Robot extends LoggedRobot {
   public static Timer matchTimer = new Timer();
   public static boolean noDefault = false;
 
+ public static final  PPHolonomicDriveController holoConfig = new PPHolonomicDriveController(
+    new PIDConstants(5.0, 0.0, 0.0),  
+    new PIDConstants(5.0, 0.0, 0.0)  
+);
+
 public static MapleSimSwerve DRIVETRAIN_SUBSYSTEM;
 public static IntakeSubsystem INTAKE_SUBSYSTEM;
 public static ShooterSubsystem SHOOTER_SUBSYSTEM;
 public static AIRobotSimulation AI_ROBOT_SIMULATION;
 public static VisionSubsystem VISION_SUBSYSTEM;
 public static MLClass ML_CLASS;
-public static SwerveDriveSimulation setSim;
+public static SwerveDriveSimulation setDrive;
+public static ShooterSubsystem setShooter;
+public static VisionSubsystem setVision;
+public static IntakeSubsystem setIntake;
+public static int setId;
+public static AIRobotSimulation MAIN_CONTROL;
+public static AIRobotSimulation AI1;
+public static AIRobotSimulation AI2;
+public static AIRobotSimulation AI3;
   public static final CommandPS5Controller m_driverController = new CommandPS5Controller(0);
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
       public static final SwerveRequest.ApplyRobotSpeeds PATH_APPLY_ROBOT_SPEEDS = new SwerveRequest.ApplyRobotSpeeds();
@@ -92,12 +109,17 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
     SimulatedArena.overrideInstance(new Arena2024Crescendo());
     SimulatedArena.getInstance();
   }
-  DRIVETRAIN_SUBSYSTEM = new MapleSimSwerve();
+  DRIVETRAIN_SUBSYSTEM = new MapleSimSwerve(true);
   INTAKE_SUBSYSTEM = new IntakeSubsystem(DRIVETRAIN_SUBSYSTEM.returnSwerveThing());
-  SHOOTER_SUBSYSTEM = new ShooterSubsystem();
+  SHOOTER_SUBSYSTEM = new ShooterSubsystem(Robot.INTAKE_SUBSYSTEM,Robot.DRIVETRAIN_SUBSYSTEM.returnSwerveThing());
   configureBindings();
   DRIVETRAIN_SUBSYSTEM.setDefaultCommand(new DriveTrainDefaultCommand(DRIVETRAIN_SUBSYSTEM));
   VISION_SUBSYSTEM = new VisionSubsystem(DRIVETRAIN_SUBSYSTEM.returnSwerveThing(),"1");
+  ML_CLASS = new MLClass();
+  ML_CLASS.train();
+  AIRobot2[] aiRobot2Array = {new AIRobot2(0, "0"), new AIRobot2(1, "1"), new AIRobot2(2, "2")};
+  
+  
 
   }
 
@@ -112,9 +134,8 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
         0.0,
         new Rotation3d(0, 0, pose2d.getRotation().getRadians()));
         Logger.recordOutput("Robot/Pose3d", pose3d);
-        for(int i = 0;i< AIRobotSimulation.instances.length; i++){
-          Logger.recordOutput("Robot/AIRobots" + i, AIRobotSimulation.instances[i].driveSimulation.getActualPoseInSimulationWorld());
-        }
+
+
 
 
         Pose3d[] notesPoses = SimulatedArena.getInstance()
@@ -175,7 +196,9 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   /** This function is called once when the robot is first started up. */
   @Override
   public void simulationInit() {
-    AIRobotSimulation.startOpponentRobotSimulations();
+    //MAIN_CONTROL = new AIRobotSimulation(0, "Main");
+    //MAIN_CONTROL.startOpponentRobotSimulations();
+
   }
 
   /** This function is called periodically whilst in simulation. */
