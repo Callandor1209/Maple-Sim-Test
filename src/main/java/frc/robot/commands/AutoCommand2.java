@@ -6,22 +6,23 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.util.ArrayClass;
 import frc.robot.util.MLClass;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class AutoCommand2 extends Command {
-    SwerveDriveSimulation driveTrainSubsystem;
+    MapleSimSwerve driveTrainSubsystem;
   VisionSubsystem visionSubsystem;
   IntakeSubsystem intakeSubsystem;
   ShooterSubsystem shooterSubsystem;
@@ -31,13 +32,14 @@ public class AutoCommand2 extends Command {
   int id;
 
   /** Creates a new AutoCommand2. */
-  public AutoCommand2(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, int id) {
+  public AutoCommand2(MapleSimSwerve driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, int id) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.driveTrainSubsystem = driveSimulation;
     this.visionSubsystem = visionSubsystem;
     this.intakeSubsystem = intakeSubsystem;
     this.shooterSubsystem = shooterSubsystem;
     this.id = id;
+    addRequirements(driveSimulation,visionSubsystem,intakeSubsystem,shooterSubsystem);
 
   }
 
@@ -54,64 +56,51 @@ public class AutoCommand2 extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if(visionSubsystem.returnArea() > 14 &&  !done){
+    double area = visionSubsystem.returnArea();
+    double yaw = visionSubsystem.returnYaw();
+    ChassisSpeeds measured = driveTrainSubsystem.getMeasuredSpeeds();
+    
+    System.out.println("Area: " + area + " | Yaw: " + yaw + " | Done: " + done);
+    System.out.println("Measured VX: " + measured.vxMetersPerSecond + " | VY: " + measured.vyMetersPerSecond);
+    System.out.println(visionSubsystem.returnArea());
+    if(visionSubsystem.returnArea() > 13 &&  !done){
       done = true;
       intakeSubsystem.setIntakeSpeed(1);
       timer.start();
+
       
       return;
     }
-    if(Robot.DRIVETRAIN_SUBSYSTEM.getMeasuredSpeeds().vxMetersPerSecond == 0 && !done){
-         SwerveModuleSimulation[] modules = driveTrainSubsystem.getModules();
-      for (SwerveModuleSimulation module : modules) {
-        // Get the motor controllers (only do this once during initialization!)
-        SimulatedMotorController.GenericMotorController driveController = 
-        module.useGenericMotorControllerForDrive();
-    SimulatedMotorController.GenericMotorController steerController = 
-        module.useGenericControllerForSteer();
-  
-    driveController.requestVoltage(Volts.of(1.0));
-    
-    steerController.requestVoltage(Volts.of(0.0));
-      }
+    if(!done){
+
+      ChassisSpeeds speeds = new ChassisSpeeds(1,0,0);
+      driveTrainSubsystem.drive(speeds, false, false);
     }
     if(done){
-           SwerveModuleSimulation[] modules = driveTrainSubsystem.getModules();
-      for (SwerveModuleSimulation module : modules) {
-        // Get the motor controllers (only do this once during initialization!)
-        SimulatedMotorController.GenericMotorController driveController = 
-        module.useGenericMotorControllerForDrive();
-    SimulatedMotorController.GenericMotorController steerController = 
-        module.useGenericControllerForSteer();
-  
-    driveController.requestVoltage(Volts.of(0.0));
-    
-    steerController.requestVoltage(Volts.of(0.0));
-      }
+      ChassisSpeeds speeds = new ChassisSpeeds(0,0,0);
+      driveTrainSubsystem.drive(speeds, false, false);
     }
+
 System.out.println("In Auto Command 2");
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    intakeSubsystem.setIntakeSpeed(0);
+    shooterSubsystem.setShooterSpeed(1);
+    shooterSubsystem.launchNote();
+    shooterSubsystem.setShooterSpeed(0);
     if(!interrupted){
+      if(Math.abs(visionSubsystem.returnYaw()) > 11 || visionSubsystem.returnArea() < 0.25){
+        new AutoCommand1(driveTrainSubsystem, visionSubsystem, intakeSubsystem, shooterSubsystem, id).schedule();
+        return;
+      }
     Robot.noDefault = false;
-    //new AutoCommand1().schedule();
     Command nextCommand = Robot.ML_CLASS.calculateNearestNeighbor(driveTrainSubsystem,visionSubsystem,intakeSubsystem, shooterSubsystem, false,id);
-    ArrayClass.aiRobot2Array[id].setCurretCommand(nextCommand);
-    SwerveModuleSimulation[] modules = driveTrainSubsystem.getModules();
-    for (SwerveModuleSimulation module : modules) {
-      // Get the motor controllers (only do this once during initialization!)
-      SimulatedMotorController.GenericMotorController driveController = 
-      module.useGenericMotorControllerForDrive();
-  SimulatedMotorController.GenericMotorController steerController = 
-      module.useGenericControllerForSteer();
-
-  driveController.requestVoltage(Volts.of(0.0));
-  
-  steerController.requestVoltage(Volts.of(0.0));
-    }
+    nextCommand.schedule();
+      ChassisSpeeds speeds = new ChassisSpeeds(0,0,0);
+      driveTrainSubsystem.drive(speeds, false, false);
     }
   }
 

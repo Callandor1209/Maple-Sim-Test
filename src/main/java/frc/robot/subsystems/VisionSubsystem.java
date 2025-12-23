@@ -52,7 +52,7 @@ public class VisionSubsystem extends SubsystemBase {
      frontCamera = new PhotonCamera("Camera");
      cameraSim = new PhotonCameraSim(frontCamera, cameraProperties);
   
-     visionSim.addCamera(cameraSim, new Transform3d(0,0,0, new Rotation3d(0,0,Math.toRadians(270))));
+     visionSim.addCamera(cameraSim, new Transform3d(0,0,0, new Rotation3d(0,0,0)));
 cameraSim.enableRawStream(true);
 
 cameraSim.enableDrawWireframe(true);
@@ -114,7 +114,7 @@ cameraSim.enableDrawWireframe(true);
   }
 
   public void updateTargets(){
-       yaw = DRIVETRAIN.getSimulatedDriveTrainPose().getRotation().getRadians() + Math.toRadians(90);
+       yaw = DRIVETRAIN.getSimulatedDriveTrainPose().getRotation().getRadians() + Math.toRadians(180);
 
     for (int i= 0; SimulatedArena.getInstance().gamePiecesOnField().size() -1 >= i && DriverStation.isEnabled() && x > 0 && Robot.isSimulation(); i++) {
       

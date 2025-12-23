@@ -33,14 +33,14 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.util.ArrayClass;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class AutoCommand1 extends Command {
   /** Creates a new autoCommand. */
-  SwerveDriveSimulation driveTrainSubsystem;
+  MapleSimSwerve driveTrainSubsystem;
   VisionSubsystem visionSubsystem;
   IntakeSubsystem intakeSubsystem;
   ShooterSubsystem shooterSubsystem;
@@ -52,13 +52,14 @@ public class AutoCommand1 extends Command {
   double y = 0;
   Command followPath;
 
-  public AutoCommand1(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem,int id) {
+  public AutoCommand1(MapleSimSwerve driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem,int id) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.driveTrainSubsystem = driveSimulation;
     this.visionSubsystem = visionSubsystem;
     this.intakeSubsystem = intakeSubsystem;
     this.shooterSubsystem = shooterSubsystem;
     this.id = id;
+    addRequirements(driveSimulation,visionSubsystem,intakeSubsystem,shooterSubsystem);
 
   }
 
@@ -73,7 +74,7 @@ public class AutoCommand1 extends Command {
   }
     Robot.noDefault = true;
     ChassisSpeeds speeds = new ChassisSpeeds(1,0,0);
-    driveTrainSubsystem.setRobotSpeeds(speeds);
+    driveTrainSubsystem.drive(speeds, false, false);;;
  
 
 timer = new Timer();
@@ -91,6 +92,55 @@ timer.start();
       }
       return;
     }
+    
+    if(visionSubsystem.returnYaw() > 10 && visionSubsystem.returnYaw() < 50 + 50  && visionSubsystem.returnArea() >= 0.25){
+      ChassisSpeeds speeds = new ChassisSpeeds(0.7,0,0);
+
+      driveTrainSubsystem.drive(speeds, false, false);;;
+      if(followPath != null){
+      followPath.cancel();
+      }
+    }
+    else{
+      ChassisSpeeds speeds = new ChassisSpeeds(0,0,1);
+      driveTrainSubsystem.drive(speeds, false, false);;;
+ 
+    }
+    if(driveTrainSubsystem.getMeasuredSpeeds().omegaRadiansPerSecond ==0 && driveTrainSubsystem.getMeasuredSpeeds().vxMetersPerSecond ==0 && driveTrainSubsystem.getMeasuredSpeeds().vyMetersPerSecond == 0){
+      ChassisSpeeds speeds = new ChassisSpeeds(0,-1,0);
+      driveTrainSubsystem.drive(speeds, false, false);
+    }
+    System.out.println("In Auto Command 1");
+    System.out.println("Yaw: " + visionSubsystem.returnYaw());
+
+
+
+
+  }
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {
+    System.out.println("Ending");
+    if(!interrupted){
+      ChassisSpeeds speeds = new ChassisSpeeds(0,0,0);
+      driveTrainSubsystem.drive(speeds, false, false);
+    Command nextCommand = new AutoCommand2(driveTrainSubsystem, visionSubsystem, intakeSubsystem, shooterSubsystem,id);
+    nextCommand.schedule();
+    System.out.println("Ended");
+    }
+
+  }
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return Math.abs(visionSubsystem.returnYaw()) < 10 && visionSubsystem.returnYaw() != 0;
+  }
+
+
+
+  public void generateNewPath(){
     x = Math.random() * 20;
     y = Math.random() * 10;
     if(y > 8 ){
@@ -102,7 +152,7 @@ timer.start();
     if(timer.get() > 6){
 
       List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses( 
-      new Pose2d(driveTrainSubsystem.getSimulatedDriveTrainPose().getX(),driveTrainSubsystem.getSimulatedDriveTrainPose().getY(), new Rotation2d()),
+      new Pose2d(driveTrainSubsystem.getPose().getX(),driveTrainSubsystem.getPose().getY(), new Rotation2d()),
       new Pose2d(x,y,new Rotation2d())
     );
     PathConstraints pathConstraints = new PathConstraints(1, 1, 180, 360); //this is just pulled from pathplanner defaults for now
@@ -110,9 +160,9 @@ timer.start();
      try {
       followPath =  new FollowPathCommand(
         path,
-        () -> driveTrainSubsystem.getSimulatedDriveTrainPose(),
-        () -> driveTrainSubsystem.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-        (speeds,feedforwards) -> driveTrainSubsystem.setRobotSpeeds(speeds),
+        () -> driveTrainSubsystem.getPose(),
+        () -> driveTrainSubsystem.getMeasuredSpeeds(),
+        (speeds,feedforwards) -> driveTrainSubsystem.drive(speeds, false, false),
         Robot.holoConfig, 
         RobotConfig.fromGUISettings(),
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
@@ -129,65 +179,5 @@ timer.start();
 
      timer.restart();
     }
-    if(visionSubsystem.returnYaw() > 10 && visionSubsystem.returnYaw() < 50 + 50  && isBallAllianceColor() && visionSubsystem.returnArea() >= 0.25){
-      ChassisSpeeds speeds = new ChassisSpeeds(0.4,0,0);
-    
- ChassisSpeeds speeds2 = new ChassisSpeeds();
- driveTrainSubsystem.setRobotSpeeds(speeds2);
-      if(followPath != null){
-      followPath.cancel();
-      }
-    }
-    else{
-      ChassisSpeeds speeds = new ChassisSpeeds(0,0,1);
-      driveTrainSubsystem.setRobotSpeeds(speeds);
- 
-    }
-    System.out.println("In Auto Command 1");
-
-
-
-  }
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    if(!interrupted){
- 
-      SwerveModuleSimulation[] modules = driveTrainSubsystem.getModules();
-      for (SwerveModuleSimulation module : modules) {
-        // Get the motor controllers (only do this once during initialization!)
-        SimulatedMotorController.GenericMotorController driveController = 
-        module.useGenericMotorControllerForDrive();
-    SimulatedMotorController.GenericMotorController steerController = 
-        module.useGenericControllerForSteer();
-  
-    driveController.requestVoltage(Volts.of(0.0));
-    
-    steerController.requestVoltage(Volts.of(0.0));
-      }
-    Command nextCommand = new AutoCommand2(driveTrainSubsystem, visionSubsystem, intakeSubsystem, shooterSubsystem,id);
-    ArrayClass.aiRobot2Array[id].setCurretCommand(nextCommand);
-    }
-
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return Math.abs(visionSubsystem.returnYaw()) < 10 && visionSubsystem.returnYaw() != 0 && isBallAllianceColor();
-  }
-
-  private boolean isBallAllianceColor(){
-    if(Robot.isSimulation()){
-      if(robotRed){
-        return visionSubsystem.returnTagId() >= 100;
-      }
-      else{
-
-        return visionSubsystem.returnTagId() < 100;
-      }
-    }
-    return false;
   }
 }

@@ -35,17 +35,17 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 
-public class MapleSimSwerve implements SwerveDrive{
+public class MapleSimSwerveSim implements SwerveDrive {
     private final SelfControlledSwerveDriveSimulation simulatedDrive;
     private final Field2d field2d;
 
-    public MapleSimSwerve(boolean configureAutoBuilder,Pose2d pose2d) {
+    public MapleSimSwerveSim() {
         // For your own code, please configure your drivetrain properly according to the documentation
         final DriveTrainSimulationConfig config = DriveTrainSimulationConfig.Default();
 
         // Creating the SelfControlledSwerveDriveSimulation instance
         this.simulatedDrive = new SelfControlledSwerveDriveSimulation(
-                new SwerveDriveSimulation(config, pose2d));
+                new SwerveDriveSimulation(config, new Pose2d(3, 3, new Rotation2d())));
 
         // Register the drivetrain simulation to the simulation world
         SimulatedArena.getInstance().addDriveTrainSimulation(simulatedDrive.getDriveTrainSimulation());
@@ -53,56 +53,20 @@ public class MapleSimSwerve implements SwerveDrive{
         // A field2d widget for debugging
         field2d = new Field2d();
         SmartDashboard.putData("simulation field", field2d);
-        if(configureAutoBuilder){
-          configureAutoBuilder();
-        }
+
     }
 
  
 
 
-    private void configureAutoBuilder()  {
-            try {
-                AutoBuilder.configure(
-                        // Use APIs from SwerveDrive interface
-                        this::getPose, 
-                        this::setPose,
-                        this::getMeasuredSpeeds,
-                        (speeds) -> this.drive(speeds, false, true),
-   
-                        // Configure the Auto PIDs
-                        new PPHolonomicDriveController(
-                                             // PID constants for translation
-                        new PIDConstants(10, 0, 0),
-                        // PID constants for rotation
-                        new PIDConstants(7, 0, 0)),
-   
-                        // Specify the PathPlanner Robot Config
-                        RobotConfig.fromGUISettings(),
-   
-                        // Path Flipping: Determines if the path should be flipped based on the robot's alliance color
-                        () -> DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue).equals(DriverStation.Alliance.Red),
-   
-                        // Specify the drive subsystem as a requirement of the command
-                        this);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (org.json.simple.parser.ParseException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
     
 
 
 
+    
 
         @Override
     public void drive(ChassisSpeeds speeds, boolean fieldRelative, boolean isOpenLoop) {
-
-
-    
         this.simulatedDrive.runChassisSpeeds(
                 new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond),
                 new Translation2d(),
@@ -117,7 +81,7 @@ public class MapleSimSwerve implements SwerveDrive{
 
     @Override
     public ChassisSpeeds getMeasuredSpeeds() {
-        return simulatedDrive.getMeasuredSpeedsRobotRelative(true);
+        return simulatedDrive.getMeasuredSpeedsFieldRelative(true);
     }
 
     @Override
@@ -150,7 +114,6 @@ public class MapleSimSwerve implements SwerveDrive{
    
     public void periodic() {
         // update the odometry of the SimplifedSwerveSimulation instance
-
         simulatedDrive.periodic();
 
         // send simulation data to dashboard for testing

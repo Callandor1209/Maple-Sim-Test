@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.MapleSimSwerve;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.util.Constants;
@@ -33,11 +34,11 @@ public class MLClass {
         keys = Constants.MLData.KEYS;
     }
 
-    public Command calculateNearestNeighbor(SwerveDriveSimulation driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, boolean isBlue, int id){
+    public Command calculateNearestNeighbor(MapleSimSwerve driveSimulation, VisionSubsystem visionSubsystem, IntakeSubsystem intakeSubsystem, ShooterSubsystem shooterSubsystem, boolean isBlue, int id){
         double time = Robot.matchTimer.get() /60;
 
         double onHomeSide;
-        if(driveSimulation.getSimulatedDriveTrainPose().getX() > 8.15){
+        if(driveSimulation.getPose().getX() > 8.15){
             onHomeSide = 0;
         }
         else onHomeSide = 1;

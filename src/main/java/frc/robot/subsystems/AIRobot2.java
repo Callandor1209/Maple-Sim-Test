@@ -26,57 +26,82 @@ import frc.robot.util.MLClass;
 public class AIRobot2 extends SubsystemBase {
   /** Creates a new AIRobot2. */
   public Command currentCommand;
+  public Command pendingCommand;
   public final String name;
   public final int id;
-  public final MapleSimSwerve driveSimulation= new MapleSimSwerve(false);
-  public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem(driveSimulation.returnSwerveThing());
-  public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(intakeSubsystem, driveSimulation.returnSwerveThing());
+  public final MapleSimSwerve driveSimulation;
+  public final IntakeSubsystem intakeSubsystem;
+  public final ShooterSubsystem shooterSubsystem;
   public final VisionSubsystem visionSubsystem;
-  public SendableChooser<Command> behaviorChooser = new SendableChooser<Command>();
-  public AIRobot2(int id,String name) {
+  public SendableChooser<String> behaviorChooser = new SendableChooser<>();
+  public boolean enabled = true;
+  public String lastSelected;
+
+  public AIRobot2(int id,String name, Pose2d pose2d) {
     this.name = name;
     this.id = id;
+    driveSimulation = new MapleSimSwerve(false,pose2d);
+    intakeSubsystem =   new IntakeSubsystem(driveSimulation.returnSwerveThing());
+    shooterSubsystem =   new ShooterSubsystem(intakeSubsystem, driveSimulation.returnSwerveThing());
     this.visionSubsystem =  new VisionSubsystem(driveSimulation.returnSwerveThing(), name);
-    behaviorChooser.addOption("Disable",new Command(){
-      @Override
-      public void initialize() {
-       setCurretCommand(null);
-      }
-    });
-    behaviorChooser.addOption("Enable", new Command() {
-      @Override
-      public void initialize() {
-        setCurretCommand(Robot.ML_CLASS.calculateNearestNeighbor(driveSimulation.returnSwerveThing(), visionSubsystem, intakeSubsystem, shooterSubsystem, false,id));
-      }
-    });
-    behaviorChooser.onChange(Command::initialize);
+    behaviorChooser.addOption("Disable", "Disable");
+    behaviorChooser.addOption("Enable", "Enable");
     SmartDashboard.putData("AIRobot/Opponent Robot " + id + " Behavior", behaviorChooser);
-    //SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation.returnSwerveThing());
   }
 
 
   public void setCurretCommand(Command newCommand){
     if(newCommand == null) return;
-    currentCommand = newCommand;
-    currentCommand.initialize();
+    pendingCommand = newCommand;
+
   }
 
  
-
+ 
   public void update(){
-    if(currentCommand == null) return;
+    String selected = behaviorChooser.getSelected();
+    if (selected != null && !selected.equals(lastSelected)) {
+        lastSelected = selected;
+        if (selected.equals("Enable")) {
+            enabled = true;
+            Robot.ML_CLASS.calculateNearestNeighbor(
+                driveSimulation, visionSubsystem, 
+                intakeSubsystem, shooterSubsystem, false, id).schedule();;
+        } else {
+            enabled = false;
+            currentCommand = null;
+        }
+      }
+      /* 
+    if(pendingCommand != null){
+      currentCommand = pendingCommand;
+      currentCommand.initialize();
+      pendingCommand = null;
+    }
+    if(currentCommand == null || !enabled) return;
 
     currentCommand.execute();
     if(currentCommand.isFinished()){
       currentCommand.end(false);
+      currentCommand = null;
     }
+    */
   }
-  @Override
+    
+  
   public void periodic() {
     // This method will be called once per scheduler run
+
     this.update();
     visionSubsystem.simUpdate();
     Pose3d pose3d = new Pose3d(this.driveSimulation.getPose().getX(),this.driveSimulation.getPose().getY(), 0, new Rotation3d(0,0,this.driveSimulation.getPose().getRotation().getRadians()));
     Logger.recordOutput("Robot/Ai" + name, pose3d);
+    if(currentCommand != null){
+    System.out.println(currentCommand.getName());
+    }
+    else System.out.println("Null");
+    //this.visionSubsystem.periodic();
+    //this.intakeSubsystem.periodic();
+    //this.shooterSubsystem.periodic();
   }
 }

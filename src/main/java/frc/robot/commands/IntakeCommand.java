@@ -13,7 +13,7 @@ public class IntakeCommand extends Command {
   /** Creates a new IntakeCommand. */
   public IntakeCommand() {
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(Robot.INTAKE_SUBSYSTEM);
+
   }
 
   // Called when the command is initially scheduled.
